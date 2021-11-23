@@ -6,7 +6,6 @@ import urllib3
 import requests
 from prettytable import PrettyTable
 
-http = urllib3.PoolManager()
 
 class KubernetesCLI(object):
 
