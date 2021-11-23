@@ -1,26 +1,16 @@
 import argparse
 import json
-import re
-import base64
-import urllib3
 import requests
 from prettytable import PrettyTable
 
 
 class KubernetesCLI(object):
 
-    
-    def __init__(self):
-         
-        
-        self._api_url = 'http://localhost:8080/apis/'
-
-    
-    
-    def get_Deployments(self,namespace):
+       
+    def get_Deployments(self,namespace, api_url='http://localhost:8080/apis/'):
 
        
-        deployments_r = requests.get(self._api_url + 'apps/v1/namespaces/' + namespace + '/deployments')        
+        deployments_r = requests.get(api_url + 'apps/v1/namespaces/' + namespace + '/deployments')        
         deployments_json = json.loads(deployments_r.text)
 
         return deployments_json
@@ -32,16 +22,23 @@ if __name__ == '__main__':
     #
     parser = argparse.ArgumentParser(description="Kubernetes CLI",                                     
                                      fromfile_prefix_chars='@')
-    parser.add_argument("--namespace",
+    parser.add_argument("--namespace","-n",
                         dest="namespace",
+                        required=True,
+                        help="R|\n"
+                             "Namespace to search")
+    parser.add_argument("--apiurl",
+                        dest="apiurl",
                         required=False,
                         help="R|\n"
-                             "Application to search")                                 
+                             "API URL")                                                            
     args = parser.parse_args()
 
     instance = KubernetesCLI()
-    deployments= instance.get_Deployments(args.namespace)
-
+    if args.apiurl:
+        deployments= instance.get_Deployments(args.namespace,args.apiurl)
+    else:
+        deployments= instance.get_Deployments(args.namespace)
     header = ['DeploymentName','Image','lastUpdateTime' ]
     table_values = PrettyTable(header)    
 
@@ -50,7 +47,7 @@ if __name__ == '__main__':
         for container in (deployment['spec']['template']['spec']['containers']):
             container_image.append(container['image'])
         
-        value = [deployment['metadata']['name'], str(container_image),deployment['status']['conditions'][-1]['lastUpdateTime']]
+        value = [deployment['metadata']['name'], ', '.join(container_image),deployment['status']['conditions'][-1]['lastUpdateTime']]
         table_values.add_row(value)
     
 
