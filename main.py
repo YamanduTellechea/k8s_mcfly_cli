@@ -4,6 +4,7 @@ import re
 import base64
 import urllib3
 import requests
+from prettytable import PrettyTable
 
 http = urllib3.PoolManager()
 
@@ -14,6 +15,7 @@ class KubernetesCLI(object):
          
         
         self._api_url = 'http://localhost:8080/apis/'
+
     
     
     def get_Deployments(self,namespace):
@@ -23,9 +25,6 @@ class KubernetesCLI(object):
         deployments_json = json.loads(deployments_r.text)
 
         return deployments_json
-
-           
-                            
                
 
 if __name__ == '__main__':
@@ -43,11 +42,25 @@ if __name__ == '__main__':
 
     instance = KubernetesCLI()
     deployments= instance.get_Deployments(args.namespace)
+
+    header = ['DeploymentName','Image','lastUpdateTime' ]
+    table_values = PrettyTable(header)    
+
+    for deployment in deployments['items']:
+        container_image = []          
+        for container in (deployment['spec']['template']['spec']['containers']):
+            container_image.append(container['image'])
+        
+        value = [deployment['metadata']['name'], str(container_image),deployment['status']['conditions'][-1]['lastUpdateTime']]
+        table_values.add_row(value)
     
-    for a in deployments['items']:
-        print(a['metadata']['name'])
-        for b in (a['spec']['template']['spec']['containers']):
-            print(b['image'])
+
+    print(table_values)
+    
+            
+
+    
+    
 
        
 
